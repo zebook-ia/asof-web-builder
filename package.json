@@ -1,0 +1,39 @@
+{
+  "name": "email-builder",
+  "version": "1.0.0",
+  "description": "Web App para criação de emails HTML profissionais",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve -s src -l 3000",
+    "build": "echo 'Build completed - static files ready'",
+    "dev": "serve -s src -l 3000",
+    "docker:build": "docker build -t email-builder .",
+    "docker:run": "docker run -p 8080:80 email-builder",
+    "docker:compose": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f email-builder"
+  },
+  "keywords": [
+    "email",
+    "html",
+    "builder",
+    "newsletter",
+    "template"
+  ],
+  "author": "ASOF",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/email-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/seu-usuario/email-builder/issues"
+  },
+  "homepage": "https://github.com/seu-usuario/email-builder#readme"
+}

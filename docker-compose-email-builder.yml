@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  email-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+        - linux/arm64
+    image: email-builder:latest
+    container_name: email-builder-app
+    restart: unless-stopped
+    ports:
+      - "80:80"  # Mude para "8080:80" se já tiver algo na porta 80
+    environment:
+      - NODE_ENV=production
+    volumes:
+      # Volume para logs persistentes
+      - ./logs:/var/log/nginx
+      # Volume para backup de configurações (opcional)
+      - ./config:/etc/nginx/conf.d:ro
+    networks:
+      - email-builder-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"  # Para usar com Traefik (se aplicável)
+      - "traefik.http.routers.email-builder.rule=Host(\`seu-dominio.com\`)"
+      - "traefik.http.services.email-builder.loadbalancer.server.port=80"
+
+  # Nginx Proxy (opcional - para SSL e domínio)
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: email-builder-proxy
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./proxy.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - email-builder-network
+    depends_on:
+      - email-builder
+    profiles:
+      - "ssl"  # Ativar com: docker-compose --profile ssl up
+
+networks:
+  email-builder-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  logs:
+    driver: local
