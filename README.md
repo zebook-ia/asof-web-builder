@@ -2,6 +2,12 @@
 
 Web App profissional para criação de emails HTML com funcionalidade de copiar para Gmail e exportar PDF.
 
+> **Dependências**
+> Este projeto exige [Docker](https://docs.docker.com/get-docker/) e
+> [Docker Compose](https://docs.docker.com/compose/) para a construção e
+> execução dos containers. Certifique-se de que ambos estejam instalados antes
+> de prosseguir.
+
 ## 📋 Pré-requisitos
 
 ### Mac M3 (Desenvolvimento)
@@ -41,12 +47,20 @@ email-builder/
 ├── nginx.conf              # Configuração do servidor web
 ├── package.json             # Dependências e scripts
 ├── deploy.sh               # Script automatizado de deploy
+├── setup.sh                # Gera arquivos padrão e executa o deploy
 ├── src/
 │   └── index.html          # Web App Email Builder
 ├── logs/                   # Logs do Nginx
 ├── config/                 # Configurações personalizadas
 └── ssl/                    # Certificados SSL (opcional)
 ```
+
+### Sobre os scripts
+
+- **deploy.sh**: compila a imagem Docker e sobe os containers via Docker
+  Compose. Ideal para atualizar rapidamente o ambiente já configurado.
+- **setup.sh**: cria todos os arquivos básicos do projeto e, ao final, chama o
+  `deploy.sh`. Útil para preparar uma máquina do zero.
 
 ## 🚀 Deploy Rápido
 
@@ -88,6 +102,16 @@ docker-compose up -d
 # Verificar status
 docker-compose ps
 ```
+
+## ▶️ Executar após ajustes
+
+Após editar `src/index.html` ou outros arquivos da aplicação, reinicie os
+containers para visualizar as mudanças:
+
+```bash
+docker-compose up -d --build
+```
+O acesso padrão continua em [http://localhost](http://localhost).
 
 ## 🌐 Acesso à Aplicação
 
