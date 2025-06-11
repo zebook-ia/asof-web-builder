@@ -1,0 +1,11 @@
+{
+  "name": "email-builder-local",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "serve -s . -l 3000",
+    "build": "echo 'Versao local pronta'"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}
