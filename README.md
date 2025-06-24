@@ -37,38 +37,90 @@ newgrp docker
 ```
 email-builder/
 ├── Dockerfile              # Imagem Docker multi-arquitetura
-├── docker-compose.yml      # Orquestração de containers
-├── nginx.conf              # Configuração do servidor web
-├── package.json             # Dependências e scripts
-├── deploy.sh               # Script automatizado de deploy
-├── src/
-│   └── index.html          # Web App Email Builder
-├── logs/                   # Logs do Nginx
-├── config/                 # Configurações personalizadas
-└── ssl/                    # Certificados SSL (opcional)
+├── docker-compose.yml      # Orquestração de containers (se aplicável para front-end estático)
+├── nginx.conf              # Configuração do Nginx (se usado para servir)
+├── package.json            # Dependências e scripts (Node.js para 'serve' e build)
+├── deploy.sh               # Script automatizado de deploy (se aplicável)
+├── index.html              # Ponto de entrada principal da aplicação Web
+├── style.css               # Folha de estilos principal
+├── script.js               # Lógica principal da aplicação em JavaScript
+├── logs/                   # Logs (e.g., do Nginx, se usado)
+├── config/                 # Configurações personalizadas (se houver)
+└── ssl/                    # Certificados SSL (opcional, para HTTPS)
 ```
 
-## 🚀 Deploy Rápido
+### Arquitetura do Frontend
+
+O frontend do Email Builder é uma aplicação de página única (SPA) construída com HTML, CSS e JavaScript puro. A estrutura visa separar preocupações:
+
+- **`index.html`**: Contém a estrutura esquelética da página, incluindo os containers para a sidebar, a barra de ferramentas, o editor de código e o painel de preview. Ele também linka os arquivos CSS e JavaScript externos.
+- **`style.css`**: Define todos os estilos visuais da aplicação, incluindo layout, tipografia, cores e responsividade. Utiliza variáveis CSS para fácil customização de temas.
+- **`script.js`**: Abriga toda a lógica da aplicação. Isso inclui:
+    - **Gerenciamento de Templates**: Carregamento e manipulação dos templates de email (atualmente embutidos como strings JavaScript).
+    - **Manipulação do DOM**: Interação com os elementos HTML para atualizar o editor, o preview, e responder a ações do usuário.
+    - **Funcionalidades Principais**: Lógica para copiar para a área de transferência (Gmail), download de HTML, download de PDF (via janela de impressão), e atualização do preview.
+    - **Controles da UI**: Handlers para botões, seletores e outras interações da interface.
+    - **`EmailBuilderAPI`**: Um namespace (objeto global `window.EmailBuilderAPI`) que expõe funções chave para interagir programaticamente com o builder. Isso facilita testes, debugging e potenciais integrações futuras.
+
+### Fluxo de Dados e Interações
+
+1.  **Inicialização**: Ao carregar a página, `script.js` inicializa a aplicação, define os event listeners nos elementos da UI e carrega o template "Em Branco" por padrão.
+2.  **Seleção de Template**: O usuário clica em um item de template na sidebar. O `script.js` detecta o clique, identifica o template selecionado através do atributo `data-template`, carrega o HTML correspondente no editor de texto e atualiza o preview.
+3.  **Edição de Código**: O usuário edita o HTML/CSS diretamente na `textarea` do editor. Um listener de `input` (com debounce) detecta as alterações e atualiza o `iframe` de preview em tempo real.
+4.  **Ações (Copiar, Baixar)**:
+    *   **Copiar para Gmail**: O conteúdo do editor é colocado em uma nova janela temporária, selecionado e copiado para a área de transferência, tentando preservar a formatação HTML.
+    *   **Baixar HTML**: O conteúdo do editor é empacotado em um Blob e um link de download é criado e clicado programaticamente.
+    *   **Baixar PDF**: O conteúdo do editor é injetado em uma nova janela com estilos de impressão e a caixa de diálogo de impressão do navegador é acionada, permitindo "Salvar como PDF".
+5.  **Configurações Rápidas**: Alterações em título, cor ou largura máxima são atualmente registradas no console e podem ser usadas para futuras melhorias (e.g., modificar dinamicamente o template ou o nome do arquivo baixado).
+
+## 🚀 Deploy Rápido (Servindo Arquivos Estáticos)
+
+Como esta é uma aplicação frontend estática, o deploy pode ser tão simples quanto servir os arquivos `index.html`, `style.css`, e `script.js` através de qualquer servidor web. O `package.json` inclui o pacote `serve` para desenvolvimento local fácil.
 
 ### 1. Preparar Ambiente
 ```bash
-# Clonar/criar estrutura
-mkdir email-builder && cd email-builder
-
-# Copiar todos os arquivos Docker (Dockerfile, docker-compose.yml, etc.)
-# Copiar o Web App para src/index.html
+# Clonar o repositório (ou copiar os arquivos: index.html, style.css, script.js, package.json)
+# mkdir email-builder && cd email-builder
+# (Copie os arquivos para este diretório)
 ```
 
-### 2. Configurar Aplicação
+### 2. Instalar Dependências (para desenvolvimento/teste local com 'serve')
 ```bash
-# Criar diretório src
-mkdir -p src
-
-# Copiar o HTML do Web App Email Builder para src/index.html
-# (Use o conteúdo completo do artefato Web App criado anteriormente)
+npm install
+# ou, se preferir yarn:
+# yarn install
 ```
 
-### 3. Deploy Automatizado
+### 3. Executar Localmente (usando 'serve')
+```bash
+npm start
+# ou
+# npx serve .
+# (Isso servirá o diretório atual na porta 3000 por padrão)
+```
+Acesse em `http://localhost:3000` (ou a porta indicada pelo `serve`).
+
+### 4. Deploy em Produção (Exemplo com Nginx)
+
+Para produção, você pode usar um servidor web como Nginx ou Apache, ou plataformas de hospedagem estática como GitHub Pages, Netlify, Vercel, AWS S3, etc.
+
+**Exemplo Básico com Docker e Nginx (usando o `nginx.conf` e `Dockerfile` fornecidos):**
+
+```bash
+# Certifique-se que Docker e Docker Compose estão instalados.
+# Construir a imagem Docker
+docker build -t email-builder-frontend:latest .
+
+# Subir o container (se usando docker-compose.yml adaptado para servir arquivos estáticos)
+# docker-compose up -d
+# OU rodar diretamente com Docker:
+docker run -d -p 80:80 --name email-builder-app email-builder-frontend:latest
+```
+Isso pressupõe que o `Dockerfile` e `nginx.conf` estão configurados para servir os arquivos `index.html`, `style.css`, e `script.js` do diretório raiz ou de um subdiretório (e.g., `dist/` ou `public/` se um passo de build fosse adicionado).
+
+**Nota:** O `deploy.sh` e `docker-compose.yml` originais podem precisar de ajustes para refletir que agora são arquivos estáticos sendo servidos, em vez de uma aplicação `src/index.html` isolada. O `Dockerfile` também deve ser ajustado para copiar `index.html`, `style.css`, `script.js` para o local apropriado do Nginx (e.g., `/usr/share/nginx/html`).
+
+### 3. Deploy Automatizado (Adaptar `deploy.sh`)
 ```bash
 # Dar permissão ao script
 chmod +x deploy.sh
